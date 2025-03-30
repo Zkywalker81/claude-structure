@@ -4,7 +4,7 @@
     "version": "1.0.0",
     "minAppVersion": "1.0.0",
     "description": "KI-gestützte Wissensorganisation mit Claude. Wandelt unformatierte Texte in strukturierte Notizen um.",
-    "author": "Obsidian User",
-    "authorUrl": "https://github.com/yourusername",
+    "author": "Your Name",
+    "authorUrl": "",
     "isDesktopOnly": false
   }

@@ -1,19 +1,47 @@
 export const DEFAULT_SETTINGS = {
     apiKey: '',
-    defaultProcessMode: 'auto', // 'auto', 'begriff', 'methode', etc.
+    // defaultProcessMode: 'auto', // Removed
     createSummaryReport: true,
     openNoteAfterCreation: true,
-    includeInLaunchpad: true,
+    // includeInLaunchpad: true, // Removed
     advancedPrompts: {
-      systemPrompt: `Du bist ein spezialisierter Assistent zur Organisation von Wissen in Obsidian. 
+      systemPrompt: `Du bist ein spezialisierter Assistent zur Organisation von Wissen in Obsidian.
       Deine Aufgabe ist es, unformatierte Informationen in strukturierte Markdown-Notizen zu verwandeln, 
       die perfekt in die Vault-Struktur des Nutzers passen. Du ordnest Wissen ein, erstellst konsistente Templates 
       und schlägst sinnvolle Verlinkungen zu anderen Notizen vor.`,
-      analyzePrompt: `Analysiere diesen Text und identifiziere, ob es sich um einen Begriff, eine Methode, 
-      ein Buch, ein Projekt, eine Idee oder einen WebClip handelt.`,
-      structurePrompt: `Fülle das Template mit dem Inhalt aus dem Text aus. Erstelle dabei einen passenden Titel, 
-      YAML-Frontmatter, Tags und alle Abschnitte des Templates.`
-    }
+     analyzePrompt: `Analysiere diesen Text und identifiziere, welcher Inhaltstyp am besten passt.
+Mögliche Typen: Begriff, Methode, Buch, Projekt, Idee, WebClip, Zitat, Studie.
+
+Konzentriere dich auf diese Signale:
+- Begriffe: Definitionen, Konzepte, Terminologie
+- Methoden: Schritte, Prozesse, Anleitungen
+- Bücher: Autor, Titel, Zusammenfassungen
+- Projekte: Ziele, Meilensteine, Zeitrahmen
+- Ideen: Kreative Gedanken, Innovationen
+- WebClips: Web-Inhalte, URLs, Online-Quellen
+- Zitate: Direkte Äußerungen mit Quellenangabe
+- Studien: Forschungsergebnisse, Daten, Methodik
+
+Text: "{text}"
+
+Antworte nur mit einem Wort: dem identifizierten Inhaltstyp.`,
+     structurePrompt: `Hier ist ein unformatierter Text:
+"{text}"
+
+Basierend auf dem identifizierten Inhaltstyp "{contentType}", verwende dieses Template:
+\`\`\`markdown
+{templateContent}
+\`\`\`
+
+Aufgabe:
+1. Fülle das Template vollständig aus mit den relevanten Informationen aus dem Text.
+2. Erstelle einen passenden Titel und YAML-Frontmatter mit sinnvollen tags, aliases, etc.
+3. Behalte die Templater-Syntax (z.B. \`<% tp.date.now() %>\`) bei.
+4. Ergänze fehlende Abschnitte sinnvoll, basierend auf dem verfügbaren Inhalt.
+5. Stelle sicher, dass alle Markdown-Formatierungen korrekt sind.
+
+Liefere nur die fertige Markdown-Notiz zurück, ohne zusätzliche Erklärungen.`
+   }
   };
   
   export const VAULT_STRUCTURE = {

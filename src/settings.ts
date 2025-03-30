@@ -35,22 +35,7 @@ export class ClaudeSettingTab extends PluginSettingTab {
     // Allgemeine Einstellungen
     containerEl.createEl('h2', { text: 'Allgemeine Einstellungen' });
 
-    new Setting(containerEl)
-      .setName('Standard-Verarbeitungsmodus')
-      .setDesc('Bestimme, wie der Inhalt standardmäßig verarbeitet werden soll.')
-      .addDropdown(dropdown => dropdown
-        .addOption('auto', 'Automatisch erkennen')
-        .addOption('begriff', 'Begriff')
-        .addOption('methode', 'Methode')
-        .addOption('buch', 'Buch')
-        .addOption('projekt', 'Projekt')
-        .addOption('idee', 'Idee')
-        .addOption('webclip', 'Web Clip')
-        .setValue(this.plugin.settings.defaultProcessMode)
-        .onChange(async (value) => {
-          this.plugin.settings.defaultProcessMode = value;
-          await this.plugin.saveSettings();
-        }));
+    // Removed Standard-Verarbeitungsmodus setting
 
     new Setting(containerEl)
       .setName('Zusammenfassungsbericht erstellen')
@@ -72,15 +57,7 @@ export class ClaudeSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
 
-    new Setting(containerEl)
-      .setName('In Launchpad einbinden')
-      .setDesc('Fügt einen Eintrag im Obsidian-Launchpad hinzu')
-      .addToggle(toggle => toggle
-        .setValue(this.plugin.settings.includeInLaunchpad)
-        .onChange(async (value) => {
-          this.plugin.settings.includeInLaunchpad = value;
-          await this.plugin.saveSettings();
-        }));
+    // Removed In Launchpad einbinden setting
 
     // Erweiterte Einstellungen
     containerEl.createEl('h2', { text: 'Erweiterte Einstellungen' });
@@ -182,15 +159,19 @@ export class ClaudeSettingTab extends PluginSettingTab {
             
             const reader = new FileReader();
             reader.onload = async (e) => {
-              try {
-                const settings = JSON.parse(e.target.result as string);
-                this.plugin.settings = settings;
-                await this.plugin.saveSettings();
-                this.display();
-              } catch (err) {
-                console.error('Fehler beim Importieren der Einstellungen:', err);
-              }
-            };
+              if (e.target && typeof e.target.result === 'string') { // Added null check and type check
+                try {
+                  const settings = JSON.parse(e.target.result); // No need for 'as string' now
+                  this.plugin.settings = settings;
+                    await this.plugin.saveSettings();
+                    this.display();
+                  } catch (err) {
+                    console.error('Fehler beim Importieren der Einstellungen:', err);
+                  }
+                } else {
+                  console.error('Fehler beim Lesen der Importdatei.');
+                }
+              };
             reader.readAsText(file);
           };
           

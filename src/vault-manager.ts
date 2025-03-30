@@ -184,25 +184,36 @@ importance: normal
     const leaf = this.app.workspace.getLeaf();
     await leaf.openFile(file);
   }
-  
+
   /**
-   * Ersetzt Templater-Variablen mit tatsächlichen Werten
-   * @param content - Der Inhalt mit Templater-Variablen
-   * @returns - Der Inhalt mit ersetzten Variablen
+   * Versucht, die Templater-API zum Verarbeiten der erstellten Notiz zu verwenden
+   * @param file - Die neu erstellte Datei
    */
-  public processTemplaterVariables(content: string): string {
-    const now = new Date();
-    
-    // Einfache Ersetzungen für häufige Templater-Variablen
-    return content
-      .replace(/<% tp\.date\.now\("YYYY-MM-DD"\) %>/g, 
-        now.toISOString().split('T')[0])
-      .replace(/<% tp\.date\.now\("DD\.MM\.YYYY"\) %>/g, 
-        now.toLocaleDateString('de-DE'))
-      .replace(/<% tp\.file\.title %>/g, 
-        'Neue Notiz'); // Wird später ersetzt
+  public async processNoteWithTemplater(file: TFile): Promise<void> {
+    // @ts-ignore - Accessing internal plugin structure
+    const templaterPlugin = this.app.plugins.plugins['templater-obsidian'];
+
+    if (templaterPlugin) {
+      try {
+        // @ts-ignore - Accessing internal Templater API
+        const success = await templaterPlugin.templater.overwrite_file_commands(file);
+        if (success) {
+          console.log(`Templater hat die Datei ${file.path} erfolgreich verarbeitet.`);
+        } else {
+           console.warn(`Templater konnte die Datei ${file.path} nicht verarbeiten (overwrite_file_commands gab false zurück).`);
+           new Notice(`Templater konnte die Datei ${file.basename} nicht vollständig verarbeiten.`);
+        }
+      } catch (error) {
+        console.error(`Fehler beim Aufruf der Templater API für ${file.path}:`, error);
+        new Notice(`Fehler bei der Templater-Verarbeitung für ${file.basename}.`);
+      }
+    } else {
+      console.warn('Templater Plugin nicht gefunden oder nicht aktiviert. Überspringe Templater-Verarbeitung.');
+      // Optional: Inform user that Templater is needed for full functionality
+      // new Notice('Templater Plugin nicht gefunden. Installieren/Aktivieren Sie es für volle Template-Funktionalität.');
+    }
   }
-  
+
   /**
    * Extrahiert Titel aus dem YAML-Frontmatter einer Markdown-Notiz
    * @param content - Der Markdown-Inhalt
@@ -223,18 +234,7 @@ importance: normal
     
     return 'Neue Notiz';
   }
-  
-  /**
-   * Ersetzt den Templater-Platzhalter für den Dateititel
-   * @param content - Der Inhalt mit Platzhaltern
-   * @param title - Der einzusetzende Titel
-   * @returns - Der Inhalt mit ersetztem Titel
-   */
-  public replaceTitlePlaceholder(content: string, title: string): string {
-    // Ersetze tp.file.title im Inhalt
-    return content.replace(/<% tp\.file\.title %>/g, title);
-  }
-  
+
   /**
    * Schlägt den optimalen Ordner für einen Inhaltstyp vor
    * @param contentType - Der Inhaltstyp
@@ -244,3 +244,4 @@ importance: normal
     const normalizedType = contentType.toLowerCase().trim();
     return this.structure.typeToFolder[normalizedType] || '00_Inbox 📥';
   }
+} // Added closing brace for the class

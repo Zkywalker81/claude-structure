@@ -1,16 +1,23 @@
 import { requestUrl, Notice } from 'obsidian';
-import { ApiResponse } from './types';
+import { ApiResponse, ClaudeSettings, ProcessingResult } from './types'; // Import ProcessingResult
+import { DEFAULT_SETTINGS } from './constants'; // Import DEFAULT_SETTINGS
 
 export class ClaudeAPI {
   private apiKey: string;
   private apiEndpoint: string;
   private systemPrompt: string;
+  private analyzePrompt: string; // Added
+  private structurePrompt: string; // Added
   private model: string;
 
-  constructor(apiKey: string, systemPrompt: string) {
+
+  constructor(apiKey: string, settings: ClaudeSettings['advancedPrompts']) { // Updated signature
     this.apiKey = apiKey;
     this.apiEndpoint = 'https://api.anthropic.com/v1/messages';
-    this.systemPrompt = systemPrompt || 'Du bist ein hilfreicher Assistent für Obsidian-Notizen.';
+    // Use provided prompts or fall back to defaults
+    this.systemPrompt = settings.systemPrompt || DEFAULT_SETTINGS.advancedPrompts.systemPrompt;
+    this.analyzePrompt = settings.analyzePrompt || DEFAULT_SETTINGS.advancedPrompts.analyzePrompt;
+    this.structurePrompt = settings.structurePrompt || DEFAULT_SETTINGS.advancedPrompts.structurePrompt;
     this.model = 'claude-3-sonnet-20240229'; // Aktuelles Modell, bei Bedarf aktualisieren
   }
 
@@ -22,10 +29,12 @@ export class ClaudeAPI {
   }
 
   /**
-   * Aktualisiert den System-Prompt
+   * Aktualisiert die Prompts basierend auf den Einstellungen
    */
-  public updateSystemPrompt(systemPrompt: string): void {
-    this.systemPrompt = systemPrompt;
+   public updatePrompts(settings: ClaudeSettings['advancedPrompts']): void { // Consolidated update method
+    this.systemPrompt = settings.systemPrompt || DEFAULT_SETTINGS.advancedPrompts.systemPrompt;
+    this.analyzePrompt = settings.analyzePrompt || DEFAULT_SETTINGS.advancedPrompts.analyzePrompt;
+    this.structurePrompt = settings.structurePrompt || DEFAULT_SETTINGS.advancedPrompts.structurePrompt;
   }
 
   /**
@@ -164,9 +173,12 @@ export class ClaudeAPI {
    * @param existingNotes - Liste vorhandener Notizen
    * @returns - Vorschläge für Verlinkungen
    */
-  public async suggestLinks(structuredNote: string, existingNotes: string[]): Promise<any> {
+  public async suggestLinks(
+    structuredNote: string,
+    existingNotes: string[]
+  ): Promise<ProcessingResult['linkSuggestions']> { // Updated return type
     const existingNotesStr = existingNotes.slice(0, 200).join('\n'); // Begrenzen auf 200 Notizen
-    
+
     const prompt = `
     Hier ist eine strukturierte Notiz:
     \`\`\`markdown
@@ -193,9 +205,11 @@ export class ClaudeAPI {
     
     const response = await this.query(prompt, { temperature: 0.3 });
     try {
-      return JSON.parse(response);
+      // Parse with expected type
+      return JSON.parse(response) as ProcessingResult['linkSuggestions'];
     } catch (error) {
       console.error('Fehler beim Parsen der Link-Vorschläge:', error);
+      // Return default structure matching the type
       return {
         directLinks: [],
         thematicLinks: [],
@@ -210,7 +224,10 @@ export class ClaudeAPI {
    * @param contentType - Der Inhaltstyp
    * @returns - Generierte DataView-Abfragen
    */
-  public async generateDataViewQueries(note: string, contentType: string): Promise<any> {
+   public async generateDataViewQueries(
+    note: string,
+    contentType: string
+  ): Promise<ProcessingResult['dataViewQueries']> { // Updated return type
     const prompt = `
     Hier ist eine strukturierte ${contentType}-Notiz:
     \`\`\`markdown
@@ -234,9 +251,11 @@ export class ClaudeAPI {
     
     const response = await this.query(prompt, { temperature: 0.4 });
     try {
-      return JSON.parse(response);
+      // Parse with expected type
+      return JSON.parse(response) as ProcessingResult['dataViewQueries'];
     } catch (error) {
       console.error('Fehler beim Parsen der DataView-Abfragen:', error);
+      // Return default structure matching the type
       return {
         typeQuery: '',
         tagQuery: '',

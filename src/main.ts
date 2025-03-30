@@ -1,11 +1,11 @@
-import { Plugin, Notice, addIcon } from 'obsidian';
+import { Plugin, Notice, addIcon, Menu, MenuItem, Editor, MarkdownView, WorkspaceLeaf } from 'obsidian';
 import { DEFAULT_SETTINGS } from './constants';
 import { ClaudeSettingTab } from './settings';
 import { ClaudeAPI } from './claude-api';
 import { VaultManager } from './vault-manager';
 import { ClaudeAssistant } from './assistant';
 import { ReportView, REPORT_VIEW_TYPE } from './views/report-view';
-import { ClaudeSettings } from './types';
+import { ClaudeSettings, ProcessingResult } from './types'; // Import ProcessingResult
 
 export default class ClaudeStructurePlugin extends Plugin {
   settings: ClaudeSettings;
@@ -24,13 +24,13 @@ export default class ClaudeStructurePlugin extends Plugin {
     
     // Komponenten initialisieren
     this.vaultManager = new VaultManager(this.app);
-    this.claudeAPI = new ClaudeAPI(this.settings.apiKey, this.settings.advancedPrompts.systemPrompt);
+    this.claudeAPI = new ClaudeAPI(this.settings.apiKey, this.settings.advancedPrompts); // Pass full settings object
     this.assistant = new ClaudeAssistant(this.app, this.settings, this.vaultManager, this.claudeAPI);
     
     // Registriere den eigenen View-Typ
     this.registerView(
       REPORT_VIEW_TYPE,
-      (leaf) => new ReportView(leaf, this.assistant)
+      (leaf: WorkspaceLeaf) => new ReportView(leaf, this.assistant) // Added type
     );
     
     // Commands registrieren
@@ -72,7 +72,7 @@ export default class ClaudeStructurePlugin extends Plugin {
     await this.saveData(this.settings);
     // Aktualisiere Komponenten nach dem Speichern der Einstellungen
     this.claudeAPI.updateApiKey(this.settings.apiKey);
-    this.claudeAPI.updateSystemPrompt(this.settings.advancedPrompts.systemPrompt);
+    this.claudeAPI.updatePrompts(this.settings.advancedPrompts); // Use new update method
   }
   
   private registerCommands() {
@@ -80,7 +80,7 @@ export default class ClaudeStructurePlugin extends Plugin {
     this.addCommand({
       id: 'process-selected-text',
       name: 'Markierten Text verarbeiten',
-      editorCallback: (editor, view) => {
+      editorCallback: (editor: Editor, view: MarkdownView) => { // Added types
         this.processSelectedText(editor, view);
       }
     });
@@ -89,7 +89,7 @@ export default class ClaudeStructurePlugin extends Plugin {
     this.addCommand({
       id: 'process-current-note',
       name: 'Aktuelle Notiz verarbeiten',
-      editorCallback: (editor, view) => {
+      editorCallback: (editor: Editor, view: MarkdownView) => { // Added types
         this.processCurrentNote(editor, view);
       }
     });
@@ -98,7 +98,7 @@ export default class ClaudeStructurePlugin extends Plugin {
     this.addCommand({
       id: 'analyze-note-type',
       name: 'Notiztyp analysieren',
-      editorCallback: (editor, view) => {
+      editorCallback: (editor: Editor, view: MarkdownView) => { // Added types
         this.analyzeNoteType(editor, view);
       }
     });
@@ -106,8 +106,8 @@ export default class ClaudeStructurePlugin extends Plugin {
   
   private registerEditorContextMenu() {
     this.registerEvent(
-      this.app.workspace.on('editor-menu', (menu, editor, view) => {
-        menu.addItem((item) => {
+      this.app.workspace.on('editor-menu', (menu: Menu, editor: Editor, view: MarkdownView) => { // Added types
+        menu.addItem((item: MenuItem) => { // Added type
           item
             .setTitle('Mit Claude verarbeiten')
             .setIcon('brain-cog')
@@ -124,7 +124,7 @@ export default class ClaudeStructurePlugin extends Plugin {
     if (this.settings.apiKey) {
       try {
         // Optional: Test-API-Aufruf um Schlüssel zu validieren
-        // await this.claudeAPI.testConnection();
+        await this.claudeAPI.testConnection();
         console.log('Claude API-Verbindung hergestellt');
       } catch (error) {
         new Notice('Claude API-Schlüssel konnte nicht validiert werden. Bitte überprüfe deine Einstellungen.');
@@ -134,29 +134,37 @@ export default class ClaudeStructurePlugin extends Plugin {
   }
   
   private showClaudeMenu() {
-    // Zeige ein Menü mit Plugin-Optionen an
-    const menu = this.app.workspace.activeLeaf?.dropdown.createMenu();
-    menu?.addItem((item) => item
-      .setTitle('Text verarbeiten')
-      .setIcon('pencil')
-      .onClick(() => {
-        const editor = this.app.workspace.activeEditor?.editor;
-        const view = this.app.workspace.activeEditor;
-        if (editor && view) {
-          this.processSelectedText(editor, view);
-        }
-      }));
-      
-    menu?.addItem((item) => item
-      .setTitle('Einstellungen')
-      .setIcon('gear')
-      .onClick(() => {
-        this.app.setting.open();
-        this.app.setting.openTabById('claude-structure');
-      }));
-  }
+      // Zeige ein Menü mit Plugin-Optionen an
+      // TODO: Needs event for showAtMouseEvent or similar to position correctly
+      const menu = new Menu();
   
-  private async processSelectedText(editor: any, view: any) {
+      menu.addItem((item: MenuItem) => item // Added type
+        .setTitle('Text verarbeiten')
+        .setIcon('pencil')
+        .onClick(() => {
+          const editor = this.app.workspace.activeEditor?.editor;
+          const view = this.app.workspace.activeEditor;
+          if (editor && view instanceof MarkdownView) { // Check view type
+            this.processSelectedText(editor, view);
+          } else {
+            new Notice("Bitte öffnen Sie zuerst eine Markdown-Notiz.");
+          }
+        }));
+        
+      menu.addItem((item: MenuItem) => item // Added type
+        .setTitle('Einstellungen')
+        .setIcon('gear')
+        .onClick(() => {
+          // @ts-ignore - Keep existing setting access for now
+          this.app.setting.open();
+          // @ts-ignore - Keep existing setting access for now
+          this.app.setting.openTabById('claude-structure');
+        }));
+        
+      // menu.showAtMouseEvent(???) // Requires mouse event from trigger
+    }
+    
+    private async processSelectedText(editor: Editor, view: MarkdownView) { // Added types
     const selectedText = editor.getSelection();
     
     if (!selectedText) {
@@ -181,7 +189,7 @@ export default class ClaudeStructurePlugin extends Plugin {
     }
   }
   
-  private async processCurrentNote(editor: any, view: any) {
+  private async processCurrentNote(editor: Editor, view: MarkdownView) { // Added types
     const noteContent = editor.getValue();
     
     if (!noteContent) {
@@ -206,7 +214,7 @@ export default class ClaudeStructurePlugin extends Plugin {
     }
   }
   
-  private async analyzeNoteType(editor: any, view: any) {
+  private async analyzeNoteType(editor: Editor, view: MarkdownView) { // Added types
     const noteContent = editor.getValue();
     
     if (!noteContent) {
@@ -228,7 +236,7 @@ export default class ClaudeStructurePlugin extends Plugin {
     }
   }
   
-  private async openReportView(results: any) {
+  private async openReportView(results: ProcessingResult) { // Added type
     // Bericht in einem eigenen View öffnen
     const workspace = this.app.workspace;
     
@@ -247,3 +255,4 @@ export default class ClaudeStructurePlugin extends Plugin {
       workspace.revealLeaf(leaf);
     }
   }
+} // Added closing brace for the class

@@ -2,6 +2,18 @@
 
 Ein Obsidian-Plugin zur Integration von Claude AI in deinen Wissensmanagement-Workflow. Dieses Plugin wandelt unformatierte Informationen automatisch in strukturierte Markdown-Notizen um, die perfekt in deine Obsidian-Vault-Struktur passen.
 
+## Letzte Änderungen (Fehlerbehebungen)
+
+In der aktuellen Version wurden mehrere Fehler behoben und Verbesserungen vorgenommen, um die Funktionalität und Stabilität zu erhöhen:
+
+- **Korrekte Template-Verarbeitung:** Die fehlerhafte manuelle Simulation von Templater-Variablen wurde entfernt. Das Plugin versucht nun, die offizielle API des **Templater-Plugins** zu verwenden (falls dieses installiert und aktiviert ist), um Templates korrekt zu verarbeiten.
+- **Funktionierende Prompt-Einstellungen:** Die Prompts für die Inhaltsanalyse und -strukturierung, die in den Einstellungen konfiguriert werden können, werden nun korrekt an die Claude API übergeben und verwendet.
+- **API-Schlüssel-Validierung:** Der API-Schlüssel wird nun beim Start von Obsidian auf Gültigkeit geprüft (erfordert eine kurze Testanfrage an die API).
+- **Abhängigkeiten aktualisiert:** Die Projektabhängigkeiten wurden auf neuere Versionen aktualisiert, und die Abhängigkeit zur Obsidian-API wurde auf eine feste Version gesetzt, um die Stabilität zu verbessern.
+- **Einstellungen bereinigt:** Nicht funktionierende Einstellungen (`Standard-Verarbeitungsmodus`, `In Launchpad einbinden`) wurden aus der Benutzeroberfläche und dem Code entfernt.
+- **Typ-Sicherheit verbessert:** Die Verwendung von `any`-Typen wurde reduziert, um die Codequalität und Fehleranfälligkeit zu verbessern.
+- **Allgemeine Korrekturen:** Diverse kleinere Fehler, Syntaxfehler und Platzhalter wurden behoben sowie unbenutzte Dateien entfernt.
+
 ## Funktionen
 
 ### Kerneigenschaften

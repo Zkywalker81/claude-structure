@@ -40,33 +40,34 @@ export class ClaudeAssistant {
       
       // 4. Titel aus dem Inhalt extrahieren
       const title = this.vaultManager.extractTitleFromContent(structuredNote);
-      
-      // 5. Templater-Variablen verarbeiten
-      let processedContent = this.vaultManager.processTemplaterVariables(structuredNote);
-      processedContent = this.vaultManager.replaceTitlePlaceholder(processedContent, title);
-      
-      // 6. Optimalen Speicherort vorschlagen
+
+      // 5. Optimalen Speicherort vorschlagen (using structuredNote before Templater)
       const suggestedPath = await this.claudeAPI.suggestStoragePath(
-        processedContent, 
-        normalizedType, 
+        structuredNote, // Use original structured note for path suggestion
+        normalizedType,
         this.vaultManager.structure
       );
-      
-      // 7. Notiz in der Vault erstellen
+
+      // 6. Notiz in der Vault erstellen (using structuredNote)
       new Notice("Erstelle Notiz in der Vault...");
       const createdFile = await this.vaultManager.createNote(
-        processedContent,
+        structuredNote, // Use original structured note content
         title,
         suggestedPath
       );
-      
-      // 8. Verlinkungsvorschläge generieren
+
+      // 7. Templater-Verarbeitung (falls Templater aktiv)
+      new Notice("Verarbeite Template (Templater)...");
+      await this.vaultManager.processNoteWithTemplater(createdFile);
+      // Hinweis: Der Inhalt von createdFile kann sich jetzt geändert haben.
+
+      // 8. Verlinkungsvorschläge generieren (using structuredNote before Templater)
       const existingNoteTitles = await this.vaultManager.getAllNoteTitles();
-      const linkSuggestions = await this.claudeAPI.suggestLinks(processedContent, existingNoteTitles);
-      
-      // 9. DataView-Abfragen generieren
-      const dataViewQueries = await this.claudeAPI.generateDataViewQueries(processedContent, normalizedType);
-      
+      const linkSuggestions = await this.claudeAPI.suggestLinks(structuredNote, existingNoteTitles);
+
+      // 9. DataView-Abfragen generieren (using structuredNote before Templater)
+      const dataViewQueries = await this.claudeAPI.generateDataViewQueries(structuredNote, normalizedType);
+
       // 10. Notiz öffnen wenn gewünscht
       if (this.settings.openNoteAfterCreation) {
         await this.vaultManager.openNote(createdFile);

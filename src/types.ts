@@ -1,9 +1,11 @@
+import { TFile } from 'obsidian';
+
 export interface ClaudeSettings {
     apiKey: string;
-    defaultProcessMode: string;
+    // defaultProcessMode: string; // Removed
     createSummaryReport: boolean;
     openNoteAfterCreation: boolean;
-    includeInLaunchpad: boolean;
+    // includeInLaunchpad: boolean; // Removed
     advancedPrompts: {
       systemPrompt: string;
       analyzePrompt: string;
@@ -25,7 +27,7 @@ export interface ClaudeSettings {
     success: boolean;
     contentType?: string;
     title?: string;
-    file?: any;
+    file?: TFile | undefined; // Updated type
     path?: string;
     linkSuggestions?: {
       directLinks: string[];
