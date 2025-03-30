@@ -1,0 +1,10 @@
+{
+    "id": "claude-structure",
+    "name": "ClaudeStructure",
+    "version": "1.0.0",
+    "minAppVersion": "1.0.0",
+    "description": "KI-gestützte Wissensorganisation mit Claude. Wandelt unformatierte Texte in strukturierte Notizen um.",
+    "author": "Obsidian User",
+    "authorUrl": "https://github.com/yourusername",
+    "isDesktopOnly": false
+  }
